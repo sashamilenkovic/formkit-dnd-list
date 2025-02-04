@@ -29,12 +29,9 @@ onMounted(() => {
     },
     config: {
       draggable: (el) => {
-        return (
-          (el.hasAttribute("data-type") &&
-            el.getAttribute("data-type") === "main") ||
-          el.classList.contains("drag-handle")
-        );
+        return el.getAttribute("data-type") === "main";
       },
+      dragHandle: ".drag-handle",
     },
   });
 });
