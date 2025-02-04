@@ -30,63 +30,83 @@ onMounted(() => {
     config: {
       draggable: (el) => {
         return (
-          el.hasAttribute("data-type") &&
-          el.getAttribute("data-type") === "text"
+          (el.hasAttribute("data-type") &&
+            el.getAttribute("data-type") === "main") ||
+          el.classList.contains("drag-handle")
         );
       },
     },
   });
 });
 
-const scriptValue = ref([
-  {
-    main: "Item 1",
-  },
-]);
+const formData = ref({
+  myList: [
+    {
+      main: "Item 1",
+    },
+  ],
+});
 </script>
 
 <template>
   <div class="flex flex-col gap-1">
-    <div
-      class="flex flex-col gap-4 rounded-lg border border-neutral-200 p-4"
-      id="list-wrapper"
+    <FormKit
+      v-model="formData"
+      type="form"
+      #default="{ value: formValue }"
+      dirty-behavior="compare"
     >
-      <FormKit
-        type="list"
-        dynamic
-        #default="{ items, node, value }"
-        :value="scriptValue"
-        @node="setListNode"
+      <pre>{{ JSON.stringify(formValue, null, 2) }}</pre>
+      <div
+        class="flex flex-col gap-4 rounded-lg border border-neutral-200 p-4"
+        id="list-wrapper"
       >
         <FormKit
-          type="group"
-          v-for="(item, index) in items"
-          :key="item"
-          :index="index"
+          type="list"
+          name="myList"
+          dynamic
+          #default="{ items, node, value }"
+          @node="setListNode"
         >
           <FormKit
-            type="text"
-            name="main"
-            :on-remove="
+            type="group"
+            v-for="(item, index) in items"
+            :key="item"
+            :index="index"
+          >
+            <div data-type="main" class="flex flex-row gap-2 items-center">
+              <div class="drag-handle">|||</div>
+              <FormKit
+                :classes="{ outer: '!mb-0' }"
+                type="text"
+                name="main"
+                :on-remove="
+                  () => {
+                    if (!value) return;
+                    node.input(value.filter((_, i) => i !== index));
+                  }
+                "
+              />
+            </div>
+            <div
+              v-if="index !== items.length - 1"
+              class="mb-2 h-[1px] bg-neutral-200"
+            />
+          </FormKit>
+          <FormKit
+            type="button"
+            @click="
               () => {
                 if (!value) return;
-                node.input(value.filter((_, i) => i !== index));
+                node.input(value.concat({ main: '' }));
               }
             "
-          />
-          <div
-            v-if="index !== items.length - 1"
-            class="mb-2 h-[1px] bg-neutral-200"
-          />
+          >
+            + Add another
+          </FormKit>
         </FormKit>
-        <FormKit
-          type="button"
-          @click="() => node.input(value.concat({ main: '' }))"
-        >
-          + Add another
-        </FormKit>
-      </FormKit>
-    </div>
+      </div>
+    </FormKit>
   </div>
 </template>
 
